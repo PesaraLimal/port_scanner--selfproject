@@ -122,11 +122,21 @@ def index():
 def status():
     # Detect Vercel platform runtime env
     is_vercel = os.environ.get('VERCEL') == '1'
+    
+    # Detect client IP address (from Vercel proxy headers if present, or direct remote_addr)
+    client_ip = None
+    x_forwarded_for = request.headers.get('X-Forwarded-For')
+    if x_forwarded_for:
+        client_ip = x_forwarded_for.split(',')[0].strip()
+    if not client_ip or client_ip in ('127.0.0.1', 'localhost'):
+        client_ip = request.remote_addr
+        
     return jsonify({
         "status": "online",
         "service": "pesz_ara_ ports scanner API",
         "version": "1.0.0",
-        "environment": "vercel" if is_vercel else "local"
+        "environment": "vercel" if is_vercel else "local",
+        "client_ip": client_ip
     })
 
 @app.route('/api/scan', methods=['POST'])

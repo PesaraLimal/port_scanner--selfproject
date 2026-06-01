@@ -57,7 +57,12 @@
           <div class="card-body">
              <!-- Target Input -->
              <div class="input-group">
-               <label for="target-input" class="input-label">Target Hostname / IP Address</label>
+               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                 <label for="target-input" class="input-label" style="margin-bottom: 0;">Target Hostname / IP Address</label>
+                 <span id="detected-ip-wrapper" class="hidden" style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent-neon-cyan); cursor: pointer; text-transform: uppercase; border-bottom: 1px dashed var(--accent-neon-cyan); transition: color 0.2s ease;" title="Click to use your public IP as target">
+                   My IP: <span id="detected-ip-val">...</span>
+                 </span>
+               </div>
                <div class="input-wrapper">
                  <span class="input-icon">IP</span>
                  <input type="text" id="target-input" placeholder="e.g. localhost or 127.0.0.1" value="127.0.0.1" required>

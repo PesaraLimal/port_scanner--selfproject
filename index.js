@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiStatusText = document.getElementById('api-status-text');
   
   const targetInput = document.getElementById('target-input');
+  const detectedIpWrapper = document.getElementById('detected-ip-wrapper');
+  const detectedIpVal = document.getElementById('detected-ip-val');
   const presetCommon = document.getElementById('preset-common');
   const presetWeb = document.getElementById('preset-web');
   const presetDatabase = document.getElementById('preset-database');
@@ -72,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Initializers & Event Listeners ---
   initSliders();
   initProfilePresets();
+  initDetectedIpShortcut();
   checkApiStatus();
   loadHistory();
 
@@ -154,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         apiEnvironment = 'local';
         apiStatusDot.className = 'status-indicator-dot online';
         apiStatusText.textContent = `API ONLINE (LOCAL SERVER) | ${data.version || 'v1'}`;
+        hideDetectedIp();
         validateTargetAddress();
         return;
       }
@@ -172,8 +176,14 @@ document.addEventListener('DOMContentLoaded', () => {
         apiStatusDot.className = 'status-indicator-dot online';
         if (apiEnvironment === 'vercel') {
           apiStatusText.textContent = `API ONLINE (CLOUD - VERCEL) | ${data.version || 'v1'}`;
+          if (data.client_ip) {
+            showDetectedIp(data.client_ip);
+          } else {
+            hideDetectedIp();
+          }
         } else {
           apiStatusText.textContent = `API ONLINE (LOCAL SERVER) | ${data.version || 'v1'}`;
+          hideDetectedIp();
         }
         
         validateTargetAddress();
@@ -184,17 +194,52 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn("API status check failed:", error);
       apiStatusDot.className = 'status-indicator-dot offline';
       apiStatusText.textContent = 'API OFFLINE / DISCONNECTED';
+      hideDetectedIp();
+    }
+  }
+
+  function initDetectedIpShortcut() {
+    if (detectedIpWrapper) {
+      detectedIpWrapper.addEventListener('click', () => {
+        const ip = detectedIpVal.textContent;
+        if (ip && ip !== '...' && ip !== 'Detecting...') {
+          targetInput.value = ip;
+          validateTargetAddress();
+          addLog(`Target host updated to your public IP: ${ip}`, 'system');
+        }
+      });
+    }
+  }
+
+  function showDetectedIp(ip) {
+    if (detectedIpWrapper && detectedIpVal) {
+      detectedIpVal.textContent = ip;
+      detectedIpWrapper.classList.remove('hidden');
+      
+      // Auto-pre-fill target input if it is still the default 127.0.0.1
+      if (targetInput.value === '127.0.0.1') {
+        targetInput.value = ip;
+        validateTargetAddress();
+        addLog(`Cloud mode: Pre-filled target with your detected public IP: ${ip}`, 'system');
+      }
+    }
+  }
+
+  function hideDetectedIp() {
+    if (detectedIpWrapper) {
+      detectedIpWrapper.classList.add('hidden');
     }
   }
 
   // Monitor target host to display warning when scanning local from Cloud Vercel API
   function validateTargetAddress() {
     const target = targetInput.value.trim().toLowerCase();
+    const warningDescription = document.querySelector('#local-target-warning .warning-description');
+    const warningTitle = document.querySelector('#local-target-warning .warning-title');
     
-    // Check if target points to loopback or local private networks
-    const isLocalhost = target === 'localhost' || 
-                        target === '127.0.0.1' || 
-                        target.startsWith('192.168.') || 
+    const isLoopback = target === 'localhost' || target === '127.0.0.1' || target === '0.0.0.0';
+    
+    const isPrivateIp = target.startsWith('192.168.') || 
                         target.startsWith('10.') || 
                         target.startsWith('172.16.') || 
                         target.startsWith('172.17.') || 
@@ -213,10 +258,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.startsWith('172.30.') || 
                         target.startsWith('172.31.');
 
-    if (isLocalhost && apiEnvironment === 'vercel') {
-      localTargetWarning.classList.remove('hidden');
+    if ((isLoopback || isPrivateIp) && apiEnvironment === 'vercel') {
+      if (localTargetWarning) {
+        localTargetWarning.classList.remove('hidden');
+        if (warningTitle && warningDescription) {
+          if (isLoopback) {
+            warningTitle.textContent = "Local Loopback Scan Alert";
+            warningDescription.innerHTML = `You are connected to the <strong>Cloud API (Vercel)</strong>. Scanning loopback addresses will scan Vercel's container loopback instead of your device. To audit your local machine, run the local backend server using <code>run.bat</code>.`;
+          } else {
+            warningTitle.textContent = "Private IP Scan Alert";
+            warningDescription.innerHTML = `You are connected to the <strong>Cloud API (Vercel)</strong>. Cloud servers cannot reach private IP addresses like <code>${escapeHtml(target)}</code> inside your local network. To scan local devices, run the local backend server using <code>run.bat</code>.`;
+          }
+        }
+      }
     } else {
-      localTargetWarning.classList.add('hidden');
+      if (localTargetWarning) {
+        localTargetWarning.classList.add('hidden');
+      }
     }
   }
 
