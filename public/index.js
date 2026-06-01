@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
     db: [1433, 3306, 5432, 6379, 27017, 1521, 9200]
   };
 
-  // Determine API base URL (relative for Vercel, fallback to localhost for development)
-  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? '' 
-    : '';
+  // Determine API base URL (fallback to localhost:5000 for local file open or other local dev ports)
+  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
+    ? 'http://127.0.0.1:5000'
+    : (window.location.protocol === 'file:' ? 'http://127.0.0.1:5000' : '');
 
   // --- Initializers & Event Listeners ---
   initSliders();

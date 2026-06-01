@@ -3,8 +3,12 @@ from flask_cors import CORS
 import socket
 import concurrent.futures
 import time
+import os
 
-app = Flask(__name__)
+# Get the absolute path to the parent directory of this file (root workspace)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+app = Flask(__name__, static_folder=parent_dir, static_url_path='')
 # Enable CORS for all routes so the frontend can easily communicate with it
 CORS(app)
 
@@ -109,6 +113,10 @@ def scan_port(ip, port, timeout=0.5):
         "service": "Closed",
         "banner": ""
     }
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 @app.route('/api/status', methods=['GET'])
 def status():
