@@ -1,0 +1,9 @@
+Port,Status,Service,Banner
+21,Open,FTP,220 (vsFTPd 3.0.3)
+22,Open,SSH,SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5
+25,Open,SMTP,220 mail.local ESMTP Postfix
+53,Open,DNS,No banner response (Active connection)
+80,Open,HTTP,HTTP/1.1 200 OK | Server: nginx/1.18.0 (Ubuntu)
+443,Open,HTTPS,HTTP/1.1 400 Bad Request | Server: nginx/1.18.0 (Ubuntu)
+3306,Open,MySQL,8.0.25-0ubuntu0.20.04.1 | mysql_native_password
+8080,Open,HTTP-ALT,HTTP/1.1 404 Not Found | Server: Apache-Coyote/1.1

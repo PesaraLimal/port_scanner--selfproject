@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environments
+.env
+.env.local
+.venv
+venv/
+ENV/
+
+# System specific
+.DS_Store
+Thumbs.db
+
+# Scanner specific local histories
+scan_history.json
+localhost
+127.0.0.1
+cd
+*.log

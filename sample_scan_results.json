@@ -1,0 +1,50 @@
+[
+    {
+        "port": 21,
+        "status": "Open",
+        "service": "FTP",
+        "banner": "220 (vsFTPd 3.0.3)"
+    },
+    {
+        "port": 22,
+        "status": "Open",
+        "service": "SSH",
+        "banner": "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5"
+    },
+    {
+        "port": 25,
+        "status": "Open",
+        "service": "SMTP",
+        "banner": "220 mail.local ESMTP Postfix"
+    },
+    {
+        "port": 53,
+        "status": "Open",
+        "service": "DNS",
+        "banner": "No banner response (Active connection)"
+    },
+    {
+        "port": 80,
+        "status": "Open",
+        "service": "HTTP",
+        "banner": "HTTP/1.1 200 OK | Server: nginx/1.18.0 (Ubuntu)"
+    },
+    {
+        "port": 443,
+        "status": "Open",
+        "service": "HTTPS",
+        "banner": "HTTP/1.1 400 Bad Request | Server: nginx/1.18.0 (Ubuntu)"
+    },
+    {
+        "port": 3306,
+        "status": "Open",
+        "service": "MySQL",
+        "banner": "8.0.25-0ubuntu0.20.04.1 | mysql_native_password"
+    },
+    {
+        "port": 8080,
+        "status": "Open",
+        "service": "HTTP-ALT",
+        "banner": "HTTP/1.1 404 Not Found | Server: Apache-Coyote/1.1"
+    }
+]

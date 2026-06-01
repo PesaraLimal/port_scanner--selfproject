@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pesz_ara_ ports scanner - Real-time Live Security Auditing Dashboard</title>
+  <meta name="description" content="A professional, real-time live port scanner with a responsive cyber-themed visual dashboard, retro debug terminal log, and CSV/JSON exporter. Hosted live on Vercel.">
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="dark-theme">
+  <!-- Interactive Cyber Background Overlay -->
+  <div class="grid-overlay"></div>
+  <div class="glow-radial"></div>
+
+  <div class="app-container">
+    <!-- Header Section -->
+    <header class="app-header">
+      <div class="header-logo-container">
+        <div class="cyber-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 7V12C3 16.5 6.8 20.8 12 22C17.2 20.8 21 16.5 21 12V7L12 2Z" stroke="#00ff66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(0, 255, 102, 0.05)"/>
+            <path d="M12 8V12" stroke="#00ff66" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 16H12.01" stroke="#00ff66" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="header-title-wrapper">
+          <h1 class="header-title">PESZ_ARA_ // <span>PORT SCANNER</span></h1>
+          <p class="header-subtitle">ACADEMIC & PROFESSIONAL NETWORK AUDITING TOOL</p>
+        </div>
+      </div>
+      
+      <div class="system-status-badge">
+        <span class="status-indicator-dot online" id="api-status-dot"></span>
+        <span class="status-indicator-text" id="api-status-text">CONNECTING TO API...</span>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-workspace">
+      
+      <!-- LEFT SECTION: Configuration & History -->
+      <section class="workspace-left">
+        <!-- Configuration Card -->
+        <div class="card glassmorphism-card" id="config-card">
+          <div class="card-header">
+            <span class="card-tag">SCANNER_CONFIG.SYS</span>
+            <h2 class="card-title">Audit Settings</h2>
+          </div>
+          
+          <div class="card-body">
+            <!-- Target Input -->
+            <div class="input-group">
+              <label for="target-input" class="input-label">Target Hostname / IP Address</label>
+              <div class="input-wrapper">
+                <span class="input-icon">IP</span>
+                <input type="text" id="target-input" placeholder="e.g. localhost or 127.0.0.1" value="127.0.0.1" required>
+              </div>
+            </div>
+
+            <!-- Port Selection Presets -->
+            <div class="input-group">
+              <label class="input-label">Scanning Profile / Target Ports</label>
+              <div class="preset-buttons-container">
+                <button type="button" class="btn-preset active" id="preset-common" data-profile="common">Common Ports (22)</button>
+                <button type="button" class="btn-preset" id="preset-web" data-profile="web">Web Ports (80/443)</button>
+                <button type="button" class="btn-preset" id="preset-database" data-profile="db">Databases</button>
+                <button type="button" class="btn-preset" id="preset-custom" data-profile="custom">Custom Range</button>
+              </div>
+            </div>
+
+            <!-- Custom Port Range Inputs (collapsible/visible when Custom selected) -->
+            <div class="custom-range-inputs hidden" id="custom-range-wrapper">
+              <div class="input-pair">
+                <div class="input-group">
+                  <label for="start-port" class="input-label">Start Port</label>
+                  <input type="number" id="start-port" min="1" max="65535" value="1">
+                </div>
+                <div class="input-group">
+                  <label for="end-port" class="input-label">End Port</label>
+                  <input type="number" id="end-port" min="1" max="65535" value="1000">
+                </div>
+              </div>
+            </div>
+
+            <!-- Advanced Configuration (Timeouts & Concurrency) -->
+            <div class="advanced-settings">
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="timeout-slider" class="input-label">Connection Timeout (sec)</label>
+                  <span class="slider-val" id="timeout-val">0.5s</span>
+                </div>
+                <input type="range" id="timeout-slider" min="0.1" max="2.0" step="0.1" value="0.5">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <label for="batch-slider" class="input-label">Batch Concurrency</label>
+                  <span class="slider-val" id="batch-val">10</span>
+                </div>
+                <input type="range" id="batch-slider" min="5" max="30" step="5" value="10">
+              </div>
+            </div>
+
+            <!-- Scan Actions -->
+            <div class="action-buttons-wrapper">
+              <button type="button" class="btn-action primary-glow" id="btn-start-scan">
+                <span class="btn-text">INITIALIZE SECURITY AUDIT</span>
+                <span class="btn-glitch-overlay"></span>
+              </button>
+              <button type="button" class="btn-action danger-glow" id="btn-cancel-scan" disabled>
+                <span class="btn-text">ABORT SCAN</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scan History Card -->
+        <div class="card glassmorphism-card" id="history-card">
+          <div class="card-header">
+            <span class="card-tag">AUDIT_LOG_ARCHIVE.DB</span>
+            <div class="header-with-action">
+              <h2 class="card-title">Saved Audit History</h2>
+              <button type="button" class="btn-text-only" id="btn-clear-history">Clear</button>
+            </div>
+          </div>
+          <div class="card-body scrollable-card-body">
+            <ul class="history-list" id="history-list-element">
+              <!-- Rendered via JS -->
+              <li class="history-empty">No scanned targets logged in local history.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT SECTION: Telemetry & Results -->
+      <section class="workspace-right">
+        <!-- Telemetry Stats Panel -->
+        <div class="telemetry-grid">
+          <!-- Resolved IP Card -->
+          <div class="telemetry-card">
+            <span class="telemetry-label">RESOLVED IP</span>
+            <div class="telemetry-value" id="stat-resolved-ip">---</div>
+          </div>
+          
+          <!-- Open Ports Card -->
+          <div class="telemetry-card highlight-green">
+            <span class="telemetry-label">OPEN PORTS FOUND</span>
+            <div class="telemetry-value" id="stat-open-ports">0</div>
+          </div>
+
+          <!-- Total Scanned Ports -->
+          <div class="telemetry-card">
+            <span class="telemetry-label">PORTS SCAN PROGRESS</span>
+            <div class="telemetry-value" id="stat-scanned-ports">0 / 0</div>
+          </div>
+
+          <!-- Elapsed Time -->
+          <div class="telemetry-card">
+            <span class="telemetry-label">ELAPSED TIME</span>
+            <div class="telemetry-value" id="stat-elapsed-time">0.0s</div>
+          </div>
+        </div>
+
+        <!-- Live Scanning Progress Bar -->
+        <div class="progress-bar-container">
+          <div class="progress-bar-indicator" id="progress-indicator" style="width: 0%"></div>
+          <div class="progress-percent" id="progress-percentage-text">0%</div>
+        </div>
+
+        <!-- Terminal Log Console -->
+        <div class="card glassmorphism-card" id="terminal-card">
+          <div class="card-header">
+            <span class="card-tag">telemetry_terminal_debugger.sh</span>
+            <div class="header-with-action">
+              <h2 class="card-title text-monospace">System Events Log</h2>
+              <button type="button" class="btn-text-only" id="btn-clear-terminal">Clear Console</button>
+            </div>
+          </div>
+          <div class="card-body terminal-body" id="terminal-console-output">
+            <div class="terminal-line system-msg">> Systems Ready. Input target and click "Initialize Security Audit" above.</div>
+          </div>
+        </div>
+
+        <!-- Discovered Ports Table -->
+        <div class="card glassmorphism-card" id="results-card">
+          <div class="card-header border-bottom-none">
+            <span class="card-tag">PORT_DISCOVERY_RESULT.TABLE</span>
+            <div class="header-table-actions">
+              <h2 class="card-title">Discovered Ports</h2>
+              <div class="table-actions">
+                <!-- Search Input -->
+                <input type="text" id="table-search-input" placeholder="Filter ports or services..." class="table-search-field">
+                
+                <!-- Filter Select -->
+                <select id="table-status-filter" class="table-filter-select">
+                  <option value="all">Show All Ports</option>
+                  <option value="open" selected>Show Open Only</option>
+                  <option value="closed">Show Closed Only</option>
+                </select>
+
+                <!-- Export Dropdown / Buttons -->
+                <div class="export-buttons">
+                  <button type="button" class="btn-export" id="btn-export-csv">CSV</button>
+                  <button type="button" class="btn-export" id="btn-export-json">JSON</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-wrapper scrollable-table-container">
+            <table class="results-table" id="results-table-element">
+              <thead>
+                <tr>
+                  <th class="sortable" id="th-port">Port <span class="sort-icon">&#9652;</span></th>
+                  <th class="sortable" id="th-protocol">Protocol</th>
+                  <th class="sortable" id="th-service">Service</th>
+                  <th class="sortable" id="th-status">Status</th>
+                  <th>Service Banner (Grabbing Output)</th>
+                </tr>
+              </thead>
+              <tbody id="results-table-body">
+                <tr>
+                  <td colspan="5" class="table-empty">No scanned ports to display. Start scanning to capture active socket listeners.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      
+    </main>
+
+    <!-- Footer info and educational notes -->
+    <footer class="app-footer">
+      <p class="disclaimer-text">
+        <strong>⚠️ EDUCATIONAL DISCLAIMER:</strong> This tool is developed for local authorized security scanning and network science education. Performing unauthorized scans against third-party network systems is illegal and violates global cyber security and computer misuse acts. Target only <code>localhost</code> or approved endpoints.
+      </p>
+      <p class="copyright-text">pesz_ara_ ports scanner Web &copy; 2026. Made with Vanilla HTML/CSS/JS and Python Serverless.</p>
+    </footer>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>

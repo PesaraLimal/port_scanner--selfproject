@@ -1,0 +1,19 @@
+# ==============================================================================
+# SecurePort Scanner - Requirements & Prerequisites
+# ==============================================================================
+# This project is designed as an educational tool for university labs and portfolios.
+# It is built ENTIRELY using Python 3's robust standard library.
+#
+# No external package installations (like pip, requests, scapy, or netaddr) are required!
+# This guarantees 100% portability, high reliability, and absolute security in restricted lab environments.
+#
+# Prerequisites:
+# - Python 3.8 or higher (which includes Tkinter, socket, threading, queue, csv, json)
+#
+# Optional dependencies (only for development/testing):
+# - pytest>=7.0.0 (For running tests)
+
+# Vercel Deployment Dependencies
+Flask>=2.0.0
+Flask-CORS>=3.0.0
+
