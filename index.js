@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
     db: [1433, 3306, 5432, 6379, 27017, 1521, 9200]
   };
 
-  // Determine API base URL (fallback to localhost:5000 for local file open or other local dev ports)
-  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
-    ? 'http://127.0.0.1:5000'
-    : (window.location.protocol === 'file:' ? 'http://127.0.0.1:5000' : '');
+  // Dynamic API Base URL detection.
+  // We will initialize it with an empty string, and checkApiStatus() will update it if a local server is present.
+  let API_BASE = '';
+
 
   // --- Initializers & Event Listeners ---
   initSliders();
@@ -136,17 +136,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Check backend serverless API status
+  // State variable to track API environment
+  let apiEnvironment = 'local'; // default fallback
+  const localTargetWarning = document.getElementById('local-target-warning');
+
+  // Check backend serverless API status (Hybrid Local/Cloud detector)
   async function checkApiStatus() {
     apiStatusDot.className = 'status-indicator-dot loading';
     apiStatusText.textContent = 'CHECKING API STATUS...';
     
+    // Step 1: Probe local backend first
     try {
-      const response = await fetch(`${API_BASE}/api/status`);
+      const localResponse = await fetch(`http://127.0.0.1:5000/api/status`);
+      if (localResponse.ok) {
+        const data = await localResponse.json();
+        API_BASE = 'http://127.0.0.1:5000';
+        apiEnvironment = 'local';
+        apiStatusDot.className = 'status-indicator-dot online';
+        apiStatusText.textContent = `API ONLINE (LOCAL SERVER) | ${data.version || 'v1'}`;
+        validateTargetAddress();
+        return;
+      }
+    } catch (e) {
+      // Local server is offline or blocked, proceed to check current origin (could be cloud host)
+    }
+
+    // Step 2: Fallback to the serving origin API
+    try {
+      const response = await fetch(`/api/status`);
       if (response.ok) {
         const data = await response.json();
+        API_BASE = ''; // Root relative path
+        apiEnvironment = data.environment || 'local';
+        
         apiStatusDot.className = 'status-indicator-dot online';
-        apiStatusText.textContent = `API ONLINE | ${data.version || 'v1'}`;
+        if (apiEnvironment === 'vercel') {
+          apiStatusText.textContent = `API ONLINE (CLOUD - VERCEL) | ${data.version || 'v1'}`;
+        } else {
+          apiStatusText.textContent = `API ONLINE (LOCAL SERVER) | ${data.version || 'v1'}`;
+        }
+        
+        validateTargetAddress();
       } else {
         throw new Error('API returned error response');
       }
@@ -156,6 +186,43 @@ document.addEventListener('DOMContentLoaded', () => {
       apiStatusText.textContent = 'API OFFLINE / DISCONNECTED';
     }
   }
+
+  // Monitor target host to display warning when scanning local from Cloud Vercel API
+  function validateTargetAddress() {
+    const target = targetInput.value.trim().toLowerCase();
+    
+    // Check if target points to loopback or local private networks
+    const isLocalhost = target === 'localhost' || 
+                        target === '127.0.0.1' || 
+                        target.startsWith('192.168.') || 
+                        target.startsWith('10.') || 
+                        target.startsWith('172.16.') || 
+                        target.startsWith('172.17.') || 
+                        target.startsWith('172.18.') || 
+                        target.startsWith('172.19.') || 
+                        target.startsWith('172.20.') || 
+                        target.startsWith('172.21.') || 
+                        target.startsWith('172.22.') || 
+                        target.startsWith('172.23.') || 
+                        target.startsWith('172.24.') || 
+                        target.startsWith('172.25.') || 
+                        target.startsWith('172.26.') || 
+                        target.startsWith('172.27.') || 
+                        target.startsWith('172.28.') || 
+                        target.startsWith('172.29.') || 
+                        target.startsWith('172.30.') || 
+                        target.startsWith('172.31.');
+
+    if (isLocalhost && apiEnvironment === 'vercel') {
+      localTargetWarning.classList.remove('hidden');
+    } else {
+      localTargetWarning.classList.add('hidden');
+    }
+  }
+
+  // Bind keyup and change event on target input to update dynamic alert real-time
+  targetInput.addEventListener('input', validateTargetAddress);
+
 
   // --- Scan Orchestration ---
   
@@ -317,6 +384,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const data = await response.json();
         
+        // Notify user if backend resolved cloud loopback to their client public IP
+        if (data.resolved_from_client && index === 0) {
+          addLog(`[CLOUD] Resolved loopback target to client public IP: ${data.target_ip} to scan your network border.`, 'warning');
+        }
+
         // Update resolved IP
         if (data.target_ip) {
           statResolvedIp.textContent = data.target_ip;

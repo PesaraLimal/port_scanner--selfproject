@@ -120,10 +120,13 @@ def index():
 
 @app.route('/api/status', methods=['GET'])
 def status():
+    # Detect Vercel platform runtime env
+    is_vercel = os.environ.get('VERCEL') == '1'
     return jsonify({
         "status": "online",
         "service": "pesz_ara_ ports scanner API",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "environment": "vercel" if is_vercel else "local"
     })
 
 @app.route('/api/scan', methods=['POST'])
@@ -140,6 +143,25 @@ def scan():
     if len(ports) > 100:
         return jsonify({"error": "Maximum of 100 ports per batch allowed."}), 400
         
+    is_vercel = os.environ.get('VERCEL') == '1'
+    resolved_from_client = False
+    
+    # If running on Vercel and targeting localhost / loopback, resolve to the client's public IP
+    if is_vercel and target.lower() in ('localhost', '127.0.0.1', '0.0.0.0'):
+        # Vercel passes client IP in the X-Forwarded-For header
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        if x_forwarded_for:
+            # X-Forwarded-For can contain a list of IPs; the first one is the client
+            client_ip = x_forwarded_for.split(',')[0].strip()
+            if client_ip and client_ip not in ('127.0.0.1', 'localhost'):
+                target = client_ip
+                resolved_from_client = True
+        else:
+            client_ip = request.remote_addr
+            if client_ip and client_ip not in ('127.0.0.1', 'localhost'):
+                target = client_ip
+                resolved_from_client = True
+
     try:
         target_ip = socket.gethostbyname(target)
     except Exception as e:
@@ -160,6 +182,7 @@ def scan():
     return jsonify({
         "target": target,
         "target_ip": target_ip,
+        "resolved_from_client": resolved_from_client,
         "results": results
     })
 

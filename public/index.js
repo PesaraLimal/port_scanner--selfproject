@@ -136,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // State variable to track API environment
+  let apiEnvironment = 'local'; // default fallback
+  const localTargetWarning = document.getElementById('local-target-warning');
+
   // Check backend serverless API status
   async function checkApiStatus() {
     apiStatusDot.className = 'status-indicator-dot loading';
@@ -145,8 +149,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${API_BASE}/api/status`);
       if (response.ok) {
         const data = await response.json();
+        apiEnvironment = data.environment || 'local';
+        
         apiStatusDot.className = 'status-indicator-dot online';
-        apiStatusText.textContent = `API ONLINE | ${data.version || 'v1'}`;
+        if (apiEnvironment === 'vercel') {
+          apiStatusText.textContent = `API ONLINE (CLOUD - VERCEL) | ${data.version || 'v1'}`;
+        } else {
+          apiStatusText.textContent = `API ONLINE (LOCAL SERVER) | ${data.version || 'v1'}`;
+        }
+        
+        // Trigger verification immediately on target input
+        validateTargetAddress();
       } else {
         throw new Error('API returned error response');
       }
@@ -156,6 +169,43 @@ document.addEventListener('DOMContentLoaded', () => {
       apiStatusText.textContent = 'API OFFLINE / DISCONNECTED';
     }
   }
+
+  // Monitor target host to display warning when scanning local from Cloud Vercel API
+  function validateTargetAddress() {
+    const target = targetInput.value.trim().toLowerCase();
+    
+    // Check if target points to loopback or local private networks
+    const isLocalhost = target === 'localhost' || 
+                        target === '127.0.0.1' || 
+                        target.startsWith('192.168.') || 
+                        target.startsWith('10.') || 
+                        target.startsWith('172.16.') || 
+                        target.startsWith('172.17.') || 
+                        target.startsWith('172.18.') || 
+                        target.startsWith('172.19.') || 
+                        target.startsWith('172.20.') || 
+                        target.startsWith('172.21.') || 
+                        target.startsWith('172.22.') || 
+                        target.startsWith('172.23.') || 
+                        target.startsWith('172.24.') || 
+                        target.startsWith('172.25.') || 
+                        target.startsWith('172.26.') || 
+                        target.startsWith('172.27.') || 
+                        target.startsWith('172.28.') || 
+                        target.startsWith('172.29.') || 
+                        target.startsWith('172.30.') || 
+                        target.startsWith('172.31.');
+
+    if (isLocalhost && apiEnvironment === 'vercel') {
+      localTargetWarning.classList.remove('hidden');
+    } else {
+      localTargetWarning.classList.add('hidden');
+    }
+  }
+
+  // Bind keyup and change event on target input to update dynamic alert real-time
+  targetInput.addEventListener('input', validateTargetAddress);
+
 
   // --- Scan Orchestration ---
   

@@ -55,14 +55,25 @@
           </div>
           
           <div class="card-body">
-            <!-- Target Input -->
-            <div class="input-group">
-              <label for="target-input" class="input-label">Target Hostname / IP Address</label>
-              <div class="input-wrapper">
-                <span class="input-icon">IP</span>
-                <input type="text" id="target-input" placeholder="e.g. localhost or 127.0.0.1" value="127.0.0.1" required>
-              </div>
-            </div>
+             <!-- Target Input -->
+             <div class="input-group">
+               <label for="target-input" class="input-label">Target Hostname / IP Address</label>
+               <div class="input-wrapper">
+                 <span class="input-icon">IP</span>
+                 <input type="text" id="target-input" placeholder="e.g. localhost or 127.0.0.1" value="127.0.0.1" required>
+               </div>
+             </div>
+
+             <!-- Local Loopback/Network Boundary Warning -->
+             <div class="warning-alert-card hidden" id="local-target-warning">
+               <div class="warning-alert-header">
+                 <span class="warning-badge">Alert</span>
+                 <span class="warning-title">Local Scan Boundary Alert</span>
+               </div>
+               <div class="warning-description">
+                 You are connected to the <strong>Cloud API (Vercel)</strong>. Scanning <code>127.0.0.1</code> or <code>localhost</code> will check Vercel's container loopback, not your physical machine. To audit local systems, start the API server locally.
+               </div>
+             </div>
 
             <!-- Port Selection Presets -->
             <div class="input-group">

@@ -913,6 +913,62 @@ body {
   font-family: var(--font-mono);
 }
 
+/* Premium Warning Alert Card */
+.warning-alert-card {
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.08) 0%, rgba(255, 100, 0, 0.03) 100%);
+  border: 1px dashed rgba(255, 170, 0, 0.35);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: slideDown 0.25s ease-out;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(255, 170, 0, 0.02);
+}
+
+.warning-alert-card.hidden {
+  display: none !important;
+}
+
+.warning-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.warning-badge {
+  background: rgba(255, 170, 0, 0.15);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  color: #ffaa00;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.warning-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffb82b;
+  letter-spacing: 0.2px;
+}
+
+.warning-description {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+}
+
+.warning-description strong {
+  color: #ffcc66;
+}
+
+
 /* --- Animations --- */
 @keyframes pulse {
   0% { opacity: 0.4; }
