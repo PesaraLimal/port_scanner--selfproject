@@ -343,6 +343,11 @@ document.addEventListener('DOMContentLoaded', () => {
     progressIndicator.style.width = '0%';
     progressPercentageText.textContent = '0%';
     
+    // Hide vulnerability card on new scan initialization
+    if (vulnerabilityCard) {
+      vulnerabilityCard.classList.add('hidden');
+    }
+    
     clearTableBody();
     clearTerminal();
     
@@ -377,6 +382,190 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCancelScan.disabled = true;
   }
 
+  // Vulnerability Reporting DOM elements
+  const vulnerabilityCard = document.getElementById('vulnerability-card');
+  const vulnReportList = document.getElementById('vuln-report-list');
+  const vulnCountHigh = document.getElementById('vuln-count-high');
+  const vulnCountMedium = document.getElementById('vuln-count-medium');
+  const vulnCountLow = document.getElementById('vuln-count-low');
+
+  // Educational vulnerability lookup catalog
+  const PORT_VULNERABILITIES = {
+    21: {
+      service: "FTP",
+      severity: "high",
+      vulnerability: "FTP transmits credentials and payload data in unencrypted cleartext. Exposed to eavesdropping and credential sniffing.",
+      recommendation: "Migrate to SFTP (SSH File Transfer Protocol) or FTPS (FTP over SSL/TLS). Disable anonymous logins."
+    },
+    22: {
+      service: "SSH",
+      severity: "low",
+      vulnerability: "Exposed SSH service interface. Susceptible to brute-force credential stuffing and potential zero-day vulnerabilities.",
+      recommendation: "Ensure password authentication is disabled in favor of cryptographic key-pair logins. Limit source IPs at the firewall."
+    },
+    23: {
+      service: "Telnet",
+      severity: "high",
+      vulnerability: "All communications (including root passwords) are transmitted in unencrypted text. Highly vulnerable to MITM attacks.",
+      recommendation: "Immediately disable the Telnet daemon. Enforce SSH (Port 22) for all console-based administrative remote sessions."
+    },
+    25: {
+      service: "SMTP",
+      severity: "medium",
+      vulnerability: "Unencrypted mail transfer. May act as an open mail relay, permitting spam abuse if configured incorrectly.",
+      recommendation: "Enable TLS transport encryption (STARTTLS) and enforce SMTP authentication (SASL). Restrict relaying domains."
+    },
+    53: {
+      service: "DNS",
+      severity: "medium",
+      vulnerability: "Potential exposure to DNS Amplification DDoS attacks, Zone Transfer disclosure (AXFR), or Cache Poisoning spoofing.",
+      recommendation: "Configure DNS server to disable open recursion for external networks. Prevent unauthorized zone transfers."
+    },
+    80: {
+      service: "HTTP",
+      severity: "medium",
+      vulnerability: "Data is transmitted in cleartext. Sessions, cookies, and login credentials can be hijacked over untrusted networks.",
+      recommendation: "Deploy SSL/TLS certificates (e.g., Let's Encrypt). Redirect all unencrypted HTTP traffic (Port 80) to HTTPS (Port 443)."
+    },
+    110: {
+      service: "POP3",
+      severity: "high",
+      vulnerability: "E-mail access is unencrypted by default. Mail content and user account credentials are sent over the wire in plain text.",
+      recommendation: "Migrate to POP3S (POP3 over SSL/TLS, typically Port 995) or use secure IMAPS instead."
+    },
+    123: {
+      service: "NTP",
+      severity: "low",
+      vulnerability: "NTP daemons are historically vulnerable to UDP reflection/amplification denial-of-service attacks.",
+      recommendation: "Keep NTP daemon updated. Disable control queries ('noquery' configuration option) in NTP configuration."
+    },
+    143: {
+      service: "IMAP",
+      severity: "high",
+      vulnerability: "Plaintext retrieval of email messages and credentials. Susceptible to credential harvesting via traffic capture.",
+      recommendation: "Enforce IMAPS (IMAP over SSL/TLS, Port 993) and restrict plain authentication protocols."
+    },
+    443: {
+      service: "HTTPS",
+      severity: "low",
+      vulnerability: "Secure web service. Threat exposure relies on backend software versions, TLS cipher suites, or certificate validity.",
+      recommendation: "Disable legacy TLS versions (1.0, 1.1) and weak SSL ciphers. Maintain web server software security updates."
+    },
+    445: {
+      service: "Microsoft-DS (SMB)",
+      severity: "high",
+      vulnerability: "Direct exposure of Windows file sharing. Historically targeted by critical worm exploits (e.g. WannaCry, EternalBlue).",
+      recommendation: "Block Port 445 at the perimeter firewall. Disable outdated SMBv1 protocol. Enforce SMB signing."
+    },
+    1433: {
+      service: "MSSQL",
+      severity: "high",
+      vulnerability: "Database instance access exposed. Highly targeted for credential brute-forcing and SQL injection payload execution.",
+      recommendation: "Bind SQL Server to local interfaces only or restrict via firewall IP whitelisting. Use Windows Integrated Authentication."
+    },
+    3306: {
+      service: "MySQL",
+      severity: "high",
+      vulnerability: "Direct exposure of relational database. Targets brute force attempts and potential remote code execution via vulnerabilities.",
+      recommendation: "Ensure MySQL is bound to 127.0.0.1 or restricted private IPs. Enforce strong password policies and TLS connection encryption."
+    },
+    3389: {
+      service: "RDP",
+      severity: "high",
+      vulnerability: "Remote desktop portal. High-risk target for brute-force attacks and exploit attempts targeting remote access flaws.",
+      recommendation: "Do not expose RDP directly to the public web. Utilize a VPN gateway, enable Multi-Factor Authentication, or configure NLA."
+    },
+    5432: {
+      service: "PostgreSQL",
+      severity: "high",
+      vulnerability: "PostgreSQL database listener exposed. Vulnerable to dictionary attacks, privilege escalation, and network snooping.",
+      recommendation: "Bind server to local loopback. Restrict remote client IPs in `pg_hba.conf` and enforce connection encryption (SSL)."
+    },
+    6379: {
+      service: "Redis",
+      severity: "high",
+      vulnerability: "In-memory database instance. Redis lacks robust default authentication and is highly vulnerable to remote script execution.",
+      recommendation: "Do not expose Redis to the public interface. Enforce binding to 127.0.0.1 and enable password authentication (`requirepass`)."
+    },
+    8080: {
+      service: "HTTP-ALT",
+      severity: "medium",
+      vulnerability: "Often runs development interfaces, admin dashboards, or unhardened application code in cleartext.",
+      recommendation: "Restrict public access. If exposing to users, wrap with an HTTPS reverse proxy and enforce robust user authentication."
+    },
+    8443: {
+      service: "HTTPS-ALT",
+      severity: "low",
+      vulnerability: "Alternative SSL port. Security depends heavily on the robustness of the underlying web application running on this port.",
+      recommendation: "Perform regular vulnerability audits on applications bound to this port. Keep server components updated."
+    }
+  };
+
+  // Dynamic Vulnerability Assessment Report Generator
+  function generateVulnerabilityReport() {
+    const openPorts = scanResults.filter(r => r.status === 'Open');
+    
+    if (openPorts.length === 0) {
+      vulnerabilityCard.classList.add('hidden');
+      return;
+    }
+    
+    // Count severities
+    let highCount = 0;
+    let mediumCount = 0;
+    let lowCount = 0;
+    
+    const vulnHtml = openPorts.map(portObj => {
+      const port = portObj.port;
+      const service = portObj.service;
+      
+      // Look up vulnerability database
+      const vulnInfo = PORT_VULNERABILITIES[port] || {
+        service: service,
+        severity: "medium",
+        vulnerability: `Port is open and listening. Active services represent potential access vectors for scanning or targeting.`,
+        recommendation: "Inspect service configuration logs. Disable service if it is not required for production operations."
+      };
+      
+      if (vulnInfo.severity === 'high') highCount++;
+      else if (vulnInfo.severity === 'medium') mediumCount++;
+      else lowCount++;
+      
+      const severityClass = vulnInfo.severity;
+      const severityText = severityClass.toUpperCase();
+      
+      return `
+        <div class="vuln-entry">
+          <div class="vuln-entry-header">
+            <div class="vuln-entry-title">
+              <span>Port ${port}</span> ${escapeHtml(vulnInfo.service)}
+            </div>
+            <span class="vuln-severity-badge ${severityClass}">${severityText}</span>
+          </div>
+          <div class="vuln-details-box">
+            <div class="vuln-detail-desc">
+              <strong>Risk:</strong> ${escapeHtml(vulnInfo.vulnerability)}
+            </div>
+            <div class="vuln-detail-recom">
+              <strong>Mitigation:</strong> ${escapeHtml(vulnInfo.recommendation)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Update counters
+    vulnCountHigh.textContent = highCount;
+    vulnCountMedium.textContent = mediumCount;
+    vulnCountLow.textContent = lowCount;
+    
+    // Render list
+    vulnReportList.innerHTML = vulnHtml;
+    
+    // Unhide the report card
+    vulnerabilityCard.classList.remove('hidden');
+  }
+
   function finishScan(target, totalPorts) {
     isScanning = false;
     clearInterval(timerInterval);
@@ -398,6 +587,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const openCount = scanResults.filter(r => r.status === 'Open').length;
     statOpenPorts.textContent = openCount;
+
+    // Generate vulnerability report
+    generateVulnerabilityReport();
 
     if (scanCancelled) {
       addLog(`Scan aborted by user. Duration: ${finalElapsed}s. Discovered ${openCount} open ports.`, 'warning');

@@ -190,6 +190,33 @@
           <div class="progress-percent" id="progress-percentage-text">0%</div>
         </div>
 
+        <!-- Vulnerability Assessment & Remediation Report Card -->
+        <div class="card glassmorphism-card hidden" id="vulnerability-card">
+          <div class="card-header">
+            <span class="card-tag">vulnerability_remediation_assessment.xml</span>
+            <h2 class="card-title text-monospace">Vulnerability Assessment Report</h2>
+          </div>
+          <div class="card-body">
+            <div class="vuln-severity-summary">
+              <div class="vuln-stat-item high">
+                <span class="vuln-stat-lbl">HIGH RISK</span>
+                <span class="vuln-stat-val" id="vuln-count-high">0</span>
+              </div>
+              <div class="vuln-stat-item medium">
+                <span class="vuln-stat-lbl">MEDIUM RISK</span>
+                <span class="vuln-stat-val" id="vuln-count-medium">0</span>
+              </div>
+              <div class="vuln-stat-item low">
+                <span class="vuln-stat-lbl">LOW/INFO</span>
+                <span class="vuln-stat-val" id="vuln-count-low">0</span>
+              </div>
+            </div>
+            <div class="vuln-list-wrapper" id="vuln-report-list">
+              <!-- Dynamically populated from JS -->
+            </div>
+          </div>
+        </div>
+
         <!-- Terminal Log Console -->
         <div class="card glassmorphism-card" id="terminal-card">
           <div class="card-header">
